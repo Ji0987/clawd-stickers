@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>小橘貼圖</title>
+<title>Clawd 貼圖</title>
 <meta name="description" content="像素風動態貼圖鍵盤：點一下就能分享或複製。">
 <meta name="theme-color" content="#F2EEE3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1A1918" media="(prefers-color-scheme: dark)">
@@ -11,7 +11,7 @@
 <link rel="icon" href="icons/app-192.png">
 <link rel="apple-touch-icon" href="icons/app-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="小橘貼圖">
+<meta name="apple-mobile-web-app-title" content="Clawd 貼圖">
 <style>
   :root {
     --bg: #F2EEE3; --panel: #FAF7EF; --cell: #FFFFFF; --ink: #1F1D1A; --muted: rgba(31,29,26,.55);
@@ -103,7 +103,7 @@
   <header>
     <div class="brand">
       <img src="icons/daily.png" alt="">
-      <h1>小橘貼圖</h1>
+      <h1>Clawd 貼圖</h1>
       <button class="icon-btn" id="help-btn" aria-label="使用說明">?</button>
     </div>
     <div class="search" id="search">
@@ -287,7 +287,7 @@ $('pv-close').onclick = () => pv.close();
 [pv, $('help')].forEach(d => d.addEventListener('click', e => { if (e.target === d) d.close(); }));
 
 // ── 說明 ──
-$('help-tap').textContent = canShare ? '開啟分享選單，直接傳到聊天 App，或選「拷貝」' : '複製貼圖，貼到 Gmail、Notion 是動圖，貼到 Discord、Slack 是會展開的 GIF 連結';
+$('help-tap').textContent = canShare ? '開啟分享選單，直接傳到聊天 App，或複製下來' : '複製貼圖，貼到 Gmail、Notion 是動圖，貼到 Discord、Slack 是會展開的 GIF 連結';
 $('help-btn').onclick = () => $('help').showModal();
 $('help-close').onclick = () => { $('help').close(); store.set('seenHelp', true); };
 
@@ -300,7 +300,7 @@ addEventListener('keydown', e => { if (e.key === '/' && document.activeElement !
 
 render();
 if (!store.get('seenHelp', false)) setTimeout(() => $('help').showModal(), 400);
-if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js?v=149009c224');
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js?v=9c9081d0c7');
 </script>
 </body>
 </html>

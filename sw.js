@@ -1,5 +1,5 @@
 // 貼圖鍵盤的離線快取：貼圖檔「先用快取」，頁面「先連網、失敗才用快取」
-const V = '149009c224';
+const V = '9c9081d0c7';
 const CORE = `core-${V}`, IMG = `img-${V}`;
 
 self.addEventListener('install', e => {

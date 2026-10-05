@@ -1,4 +1,4 @@
-# 小橘貼圖
+# Clawd 貼圖
 
 ### 👉 [打開貼圖鍵盤](https://ji0987.github.io/clawd-stickers/)
 
