@@ -1,0 +1,15 @@
+{
+  "name": "小橘貼圖",
+  "short_name": "小橘貼圖",
+  "description": "像素風動態貼圖鍵盤：點一下就能分享或複製。",
+  "lang": "zh-Hant",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F2EEE3",
+  "theme_color": "#F2EEE3",
+  "icons": [
+    { "src": "icons/app-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/app-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

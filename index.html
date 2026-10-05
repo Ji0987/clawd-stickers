@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>小橘貼圖</title>
+<meta name="description" content="像素風動態貼圖鍵盤：點一下就能分享或複製。">
+<meta name="theme-color" content="#F2EEE3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1A1918" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/app-192.png">
+<link rel="apple-touch-icon" href="icons/app-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="小橘貼圖">
+<style>
+  :root {
+    --bg: #F2EEE3; --panel: #FAF7EF; --cell: #FFFFFF; --ink: #1F1D1A; --muted: rgba(31,29,26,.55);
+    --line: rgba(31,29,26,.1); --clay: #D97757; --clay-soft: rgba(217,119,87,.14); --shadow: 0 6px 24px rgba(31,29,26,.12);
+    --bar: 64px; --safe-b: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #1A1918; --panel: #242220; --cell: #2E2B29; --ink: #F2EEE3; --muted: rgba(242,238,227,.55); --line: rgba(242,238,227,.1); --clay-soft: rgba(217,119,87,.22); --shadow: 0 6px 24px rgba(0,0,0,.4); }
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); }
+  body { font-family: "Microsoft JhengHei", "Noto Sans TC", "PingFang TC", system-ui, sans-serif; min-height: 100dvh; }
+  button { font: inherit; color: inherit; }
+  .app { max-width: 760px; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; }
+
+  /* 頂部：品牌 + 搜尋 */
+  header { position: sticky; top: 0; z-index: 10; background: var(--bg); padding: 10px 16px 8px; padding-top: max(10px, env(safe-area-inset-top)); }
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .brand img { width: 32px; height: 32px; border-radius: 9px; image-rendering: pixelated; }
+  .brand h1 { font-size: 18px; margin: 0; flex: 1; letter-spacing: .02em; }
+  .icon-btn { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: var(--panel); cursor: pointer; display: grid; place-items: center; font-size: 16px; }
+  .search { position: relative; }
+  .search input { width: 100%; font: inherit; font-size: 16px; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 10px 40px 10px 38px; outline: none; }
+  .search input:focus { border-color: var(--clay); box-shadow: 0 0 0 3px var(--clay-soft); }
+  .search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: .5; }
+  .search input::-webkit-search-cancel-button { -webkit-appearance: none; display: none; }
+  .search .clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; border: 0; background: none; cursor: pointer; opacity: .55; font-size: 18px; display: none; }
+  .search.has .clear { display: block; }
+
+  /* 貼圖格 */
+  main { flex: 1; padding: 4px 12px calc(var(--bar) + var(--safe-b) + 24px); }
+  .heading { display: flex; align-items: baseline; gap: 8px; padding: 10px 4px 8px; }
+  .heading h2 { font-size: 15px; margin: 0; }
+  .heading span { font-size: 12px; color: var(--muted); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+  .st { position: relative; background: var(--cell); border: 1px solid var(--line); border-radius: 14px; padding: 4px; cursor: pointer; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; transition: transform .12s, box-shadow .12s; }
+  .st:hover { box-shadow: var(--shadow); }
+  .st:active { transform: scale(.94); }
+  .st:focus-visible { outline: 3px solid var(--clay); outline-offset: 2px; }
+  .st img { display: block; width: 100%; height: auto; aspect-ratio: 320 / 270; pointer-events: none; }
+  .st .nm { font-size: 11px; color: var(--muted); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 2px 2px; }
+  .st .fav { position: absolute; top: 5px; right: 6px; font-size: 12px; color: var(--clay); display: none; }
+  .st.is-fav .fav { display: block; }
+  .st.done { animation: pop .45s ease; }
+  @keyframes pop { 0% { transform: scale(.92); } 50% { transform: scale(1.05); box-shadow: 0 0 0 3px var(--clay); } 100% { transform: scale(1); } }
+  .empty { text-align: center; color: var(--muted); padding: 56px 24px; line-height: 1.8; font-size: 14px; }
+  .empty b { display: block; font-size: 40px; margin-bottom: 4px; }
+
+  /* 底部分組列 */
+  nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: color-mix(in srgb, var(--panel) 94%, transparent); backdrop-filter: blur(10px); border-top: 1px solid var(--line); padding-bottom: var(--safe-b); }
+  nav.tabs .in { max-width: 760px; margin: 0 auto; display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; padding: 6px 8px; }
+  nav.tabs .in::-webkit-scrollbar { display: none; }
+  .tab { flex: none; width: 60px; border: 0; background: none; border-radius: 12px; padding: 5px 2px 3px; cursor: pointer; display: grid; justify-items: center; gap: 1px; color: var(--muted); }
+  .tab img, .tab .glyph { width: 30px; height: 30px; image-rendering: pixelated; }
+  .tab .glyph { display: grid; place-items: center; font-size: 20px; }
+  .tab small { font-size: 10px; white-space: nowrap; }
+  .tab[aria-selected="true"] { background: var(--clay-soft); color: var(--ink); }
+  .tab[aria-selected="true"] small { font-weight: 700; }
+
+  /* 預覽面板 */
+  dialog { border: 0; padding: 0; background: transparent; color: var(--ink); max-width: 100vw; max-height: 100dvh; }
+  dialog::backdrop { background: rgba(20,18,16,.55); backdrop-filter: blur(2px); }
+  .sheet { width: min(440px, 100vw); background: var(--panel); border-radius: 22px; padding: 16px; box-shadow: var(--shadow); }
+  @media (max-width: 520px) {
+    dialog.bottom { margin: auto 0 0; }
+    dialog.bottom .sheet { border-radius: 22px 22px 0 0; padding-bottom: calc(16px + var(--safe-b)); }
+  }
+  .sheet .big { background: var(--cell); border-radius: 16px; padding: 8px; }
+  .sheet .big img { display: block; width: 100%; height: auto; aspect-ratio: 320 / 270; }
+  .sheet h3 { margin: 12px 4px 2px; font-size: 18px; }
+  .sheet .meta { margin: 0 4px 12px; font-size: 13px; color: var(--muted); }
+  .row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; }
+  .btn { border: 1px solid var(--line); background: var(--cell); border-radius: 12px; padding: 11px 14px; cursor: pointer; font-size: 15px; text-decoration: none; color: var(--ink); text-align: center; }
+  .btn.primary { background: var(--clay); border-color: var(--clay); color: #fff; font-weight: 700; }
+  .btn[aria-pressed="true"] { color: var(--clay); border-color: var(--clay); }
+  .help h3 { margin: 4px 4px 10px; }
+  .help ul { margin: 0 0 14px; padding-left: 22px; line-height: 1.8; font-size: 14px; }
+  .help p { font-size: 12px; color: var(--muted); margin: 0 4px 12px; }
+
+  #toast { position: fixed; left: 50%; bottom: calc(var(--bar) + var(--safe-b) + 18px); transform: translate(-50%, 12px); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-size: 14px; opacity: 0; pointer-events: none; transition: .2s; z-index: 30; width: max-content; max-width: calc(100vw - 32px); text-align: center; }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (min-width: 600px) { .grid { grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 10px; } .tab { width: 72px; } }
+  @media (prefers-reduced-motion: reduce) { .st, .st.done, #toast { animation: none; transition: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <img src="icons/daily.png" alt="">
+      <h1>小橘貼圖</h1>
+      <button class="icon-btn" id="help-btn" aria-label="使用說明">?</button>
+    </div>
+    <div class="search" id="search">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" placeholder="搜尋貼圖，例如：好、謝謝、珍奶" autocomplete="off" enterkeyhint="search" aria-label="搜尋貼圖">
+      <button class="clear" id="q-clear" aria-label="清除搜尋">×</button>
+    </div>
+  </header>
+  <main id="main" aria-live="polite"></main>
+</div>
+
+<nav class="tabs" aria-label="貼圖分組"><div class="in" role="tablist" id="tabs"></div></nav>
+
+<dialog id="pv" class="bottom" aria-label="貼圖預覽">
+  <div class="sheet">
+    <div class="big"><img id="pv-img" alt=""></div>
+    <h3 id="pv-name"></h3>
+    <p class="meta" id="pv-meta"></p>
+    <div class="row">
+      <button class="btn primary" id="pv-send"></button>
+      <button class="btn" id="pv-fav" aria-pressed="false">☆ 最愛</button>
+      <button class="btn" id="pv-close">關閉</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="help" class="bottom" aria-label="使用說明">
+  <div class="sheet help">
+    <h3>怎麼用</h3>
+    <ul>
+      <li><b>點一下</b>貼圖：<span id="help-tap"></span></li>
+      <li><b>長按</b>（電腦按右鍵）：放大預覽、加入最愛</li>
+      <li>用過的貼圖會出現在底部的「最近」</li>
+      <li>手機用瀏覽器選單的<b>「加到主畫面」</b>，就能像 App 一樣開啟，看過的貼圖離線也能用</li>
+    </ul>
+    <p>本站為個人非官方創作，與 Anthropic 無關。</p>
+    <button class="btn primary" style="width:100%" id="help-close">知道了</button>
+  </div>
+</dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const SETS = [{"k":"daily","t":"日常","items":[{"id":"01-hi","n":"嗨～"},{"id":"02-ok","n":"收到！"},{"id":"03-think","n":"想一下…"},{"id":"04-yay","n":"太讚了！"},{"id":"05-thanks","n":"謝謝你"},{"id":"06-tired","n":"沒電了…"},{"id":"07-what","n":"蛤？！"},{"id":"08-coding","n":"寫程式中"},{"id":"09-night","n":"晚安"},{"id":"10-cry","n":"哭哭"},{"id":"11-angry","n":"生氣！"},{"id":"12-cheer","n":"加油！"},{"id":"13-okay","n":"OK！"},{"id":"14-please","n":"拜託～"},{"id":"15-hungry","n":"好餓…"},{"id":"16-busy","n":"在忙！"},{"id":"17-morning","n":"早安"},{"id":"18-sorry","n":"對不起"},{"id":"19-love","n":"愛你"},{"id":"20-lol","n":"哈哈哈"},{"id":"21-bye","n":"掰掰～"},{"id":"22-calm","n":"冷靜一下"},{"id":"23-done","n":"搞定！"},{"id":"24-really","n":"真的嗎？"}]},{"k":"dev","t":"工程師","items":[{"id":"01-compile","n":"編譯中…"},{"id":"02-pass","n":"全部通過！"},{"id":"03-red","n":"全紅了…"},{"id":"04-mymachine","n":"我這邊可以跑"},{"id":"05-conflict","n":"衝突了…"},{"id":"06-deploy","n":"上線囉！"},{"id":"07-bug","n":"抓到 bug 了！"},{"id":"08-coffee","n":"咖啡續命"},{"id":"09-force","n":"誰 force push？！"},{"id":"10-log","n":"查 log 中…"},{"id":"11-lgtm","n":"LGTM！"},{"id":"12-changed","n":"需求又改了？"},{"id":"13-deadline","n":"Deadline！"},{"id":"14-meeting","n":"開會中…"},{"id":"15-reboot","n":"重開機試試"},{"id":"16-copypaste","n":"複製貼上"},{"id":"17-404","n":"404"},{"id":"18-todo","n":"TODO 爆了"},{"id":"19-oom","n":"記憶體不足"},{"id":"20-loop","n":"無限迴圈"},{"id":"21-offwork","n":"下班！"},{"id":"22-shipit","n":"先上再說"},{"id":"23-rollback","n":"回滾！"},{"id":"24-onit","n":"交給我！"}]},{"k":"glitch","t":"像素崩壞","items":[{"id":"01-soul","n":"靈魂出竅"},{"id":"02-stone","n":"石化了…"},{"id":"03-crash","n":"當機了"},{"id":"04-melt","n":"融化了…"},{"id":"05-boom","n":"炸裂！"},{"id":"06-loading","n":"大腦載入中"},{"id":"07-static","n":"訊號不良"},{"id":"08-lowres","n":"糊掉了…"},{"id":"09-lag","n":"lag 了…"},{"id":"10-offline","n":"斷線了…"},{"id":"11-rebuild","n":"重組中…"},{"id":"12-overheat","n":"過熱了！"},{"id":"13-censored","n":"不能看！"},{"id":"14-clones","n":"分身乏術"},{"id":"15-vanish","n":"想消失…"},{"id":"16-deleted","n":"被刪掉了"},{"id":"17-broken","n":"我壞掉了"},{"id":"18-heartbreak","n":"心碎了…"},{"id":"19-shock","n":"震驚！"},{"id":"20-blank","n":"腦袋空白"},{"id":"21-upside","n":"世界顛倒"},{"id":"22-dragged","n":"放我下來！"},{"id":"23-unsaved","n":"沒存到！"},{"id":"24-respawn","n":"復活！"}]},{"k":"tw","t":"台灣日常","items":[{"id":"01-boba","n":"全糖去冰"},{"id":"02-cutlet","n":"雞排加辣"},{"id":"03-typhoon","n":"放颱風假！"},{"id":"04-market","n":"逛夜市"},{"id":"05-scooter","n":"騎車小心"},{"id":"06-store","n":"去超商"},{"id":"07-sorry","n":"歹勢啦"},{"id":"08-hello","n":"是在哈囉？"},{"id":"09-okok","n":"好啦好啦"},{"id":"10-gather","n":"揪團喔！"},{"id":"11-eaten","n":"呷飽未？"},{"id":"12-great","n":"讚啦！"},{"id":"13-cat","n":"傻眼貓咪"},{"id":"14-queue","n":"排隊中…"},{"id":"15-pray","n":"拜拜保平安"},{"id":"16-redenv","n":"紅包拿來"},{"id":"17-rain","n":"又下雨了…"},{"id":"18-hot","n":"熱死了"},{"id":"19-ice","n":"吃冰囉！"},{"id":"20-scared","n":"剉咧等"},{"id":"21-lame","n":"很瞎欸…"},{"id":"22-traffic","n":"塞爆了"},{"id":"23-receipt","n":"發票中了！"},{"id":"24-dinner","n":"晚餐吃啥？"}]},{"k":"fest","t":"節慶","items":[{"id":"01-newyear","n":"新年快樂"},{"id":"02-fortune","n":"恭喜發財"},{"id":"03-spring","n":"新春大吉"},{"id":"04-lantern","n":"元宵快樂"},{"id":"05-valentine","n":"情人節快樂"},{"id":"06-children","n":"兒童節快樂"},{"id":"07-mother","n":"母親節快樂"},{"id":"08-dragonboat","n":"端午節快樂"},{"id":"09-egg","n":"立蛋成功！"},{"id":"10-father","n":"父親節快樂"},{"id":"11-qixi","n":"七夕快樂"},{"id":"12-midautumn","n":"中秋快樂"},{"id":"13-bbq","n":"烤肉囉！"},{"id":"14-pomelo","n":"戴柚子帽"},{"id":"15-teacher","n":"老師辛苦了"},{"id":"16-trick","n":"不給糖就搗蛋"},{"id":"17-halloween","n":"萬聖節快樂"},{"id":"18-double11","n":"雙11 買爆"},{"id":"19-solstice","n":"冬至吃湯圓"},{"id":"20-santa","n":"聖誕快樂"},{"id":"21-tree","n":"Merry Xmas"},{"id":"22-countdown","n":"跨年倒數"},{"id":"23-birthday","n":"生日快樂"},{"id":"24-graduate","n":"畢業快樂！"}]},{"k":"text","t":"大字回覆","items":[{"id":"01-ok","n":"好"},{"id":"02-mhm","n":"嗯嗯"},{"id":"03-what","n":"？？？"},{"id":"04-like","n":"讚"},{"id":"05-got","n":"收"},{"id":"06-no","n":"不要"},{"id":"07-waitme","n":"等我"},{"id":"08-okay","n":"OK"},{"id":"09-right","n":"對"},{"id":"10-haha","n":"哈哈"},{"id":"11-thanks","n":"謝謝"},{"id":"12-sorry","n":"抱歉"},{"id":"13-later","n":"晚點說"},{"id":"14-ontheway","n":"在路上"},{"id":"15-arrived","n":"到了"},{"id":"16-plus1","n":"+1"},{"id":"17-really","n":"真假"},{"id":"18-go","n":"衝！"},{"id":"19-yay","n":"好耶"},{"id":"20-noproblem","n":"沒問題"},{"id":"21-later2","n":"再說"},{"id":"22-hi","n":"安安"},{"id":"23-bye","n":"掰"},{"id":"24-sleep","n":"睡了"}]},{"k":"duo","t":"小藍登場","items":[{"id":"01-meet","n":"初次見面！"},{"id":"02-highfive","n":"擊掌！"},{"id":"03-share","n":"分你喝"},{"id":"04-fight","n":"哼！"},{"id":"05-hug","n":"和好啦"},{"id":"06-backtoback","n":"有我在"},{"id":"07-sleep","n":"一起睡"},{"id":"08-mine","n":"我的！"},{"id":"09-poke","n":"嘿！"},{"id":"10-race","n":"比賽！"},{"id":"11-selfie","n":"合照！"},{"id":"12-gift","n":"送你！"},{"id":"13-comfort","n":"秀秀"},{"id":"14-dance","n":"嗨起來！"},{"id":"15-stack","n":"疊疊樂"},{"id":"16-umbrella","n":"一起撐"},{"id":"17-peek","n":"偷看中…"},{"id":"18-best","n":"我們最讚"},{"id":"19-cheers","n":"乾杯！"},{"id":"20-weird","n":"你很怪欸"},{"id":"21-walk","n":"走吧！"},{"id":"22-youfirst","n":"你先啦"},{"id":"23-waited","n":"等很久了"},{"id":"24-together","n":"有你真好"}]}];
+const ALL = [], BY = new Map();
+SETS.forEach(s => s.items.forEach(it => {
+  const st = { key: `${s.k}/${it.id}`, name: it.n, set: s.t, webp: `s/${s.k}/${it.id}.webp`, gif: `s/${s.k}/${it.id}.gif` };
+  ALL.push(st); BY.set(st.key, st);
+}));
+const $ = id => document.getElementById(id);
+const touch = matchMedia('(hover: none)').matches;
+const canShare = touch && !!navigator.share && !!navigator.canShare;
+
+// ── 本機記憶（最近、最愛、上次的分組） ──
+const store = {
+  get(k, d) { try { return JSON.parse(localStorage.getItem('xj.' + k)) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('xj.' + k, JSON.stringify(v)); } catch {} },
+};
+let recents = store.get('recents', []).filter(k => BY.has(k));
+let favs = new Set(store.get('favs', []).filter(k => BY.has(k)));
+const pushRecent = k => { recents = [k, ...recents.filter(x => x !== k)].slice(0, 32); store.set('recents', recents); };
+const toggleFav = k => { favs.has(k) ? favs.delete(k) : favs.add(k); store.set('favs', [...favs]); };
+
+// ── 分組列 ──
+const TABS = [{ id: 'recent', t: '最近', glyph: '🕘' }, { id: 'fav', t: '最愛', glyph: '★' }, ...SETS.map(s => ({ id: s.k, t: s.t, icon: `icons/${s.k}.png` }))];
+let active = store.get('tab', null);
+if (!TABS.some(t => t.id === active)) active = recents.length ? 'recent' : SETS[0].k;
+const tabsEl = $('tabs');
+TABS.forEach(t => {
+  const b = document.createElement('button');
+  b.className = 'tab'; b.setAttribute('role', 'tab'); b.dataset.id = t.id;
+  b.innerHTML = (t.icon ? `<img src="${t.icon}" alt="">` : `<span class="glyph" aria-hidden="true">${t.glyph}</span>`) + `<small>${t.t}</small>`;
+  b.onclick = () => { setTab(t.id); };
+  tabsEl.append(b);
+});
+function setTab(id) {
+  active = id; store.set('tab', id);
+  if (q.value) { q.value = ''; $('search').classList.remove('has'); }
+  render(); scrollTo({ top: 0 });
+}
+
+// ── 畫面 ──
+const main = $('main'), q = $('q');
+const norm = s => s.toLowerCase().replace(/[～~！!？?…。，,\s]/g, '');
+function render() {
+  tabsEl.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.id === active)));
+  const sel = tabsEl.querySelector('[aria-selected="true"]'); if (sel) sel.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  const term = norm(q.value);
+  let list, title, sub = '', empty = '';
+  if (term) {
+    list = ALL.filter(s => norm(s.name).includes(term) || norm(s.set).includes(term));
+    title = `搜尋「${q.value.trim()}」`; sub = `${list.length} 張`;
+    empty = '<b>🔍</b>找不到相符的貼圖<br>換個字試試看，例如「好」「哈」「謝」';
+  } else if (active === 'recent') {
+    list = recents.map(k => BY.get(k)); title = '最近使用';
+    empty = '<b>🕘</b>還沒有用過的貼圖<br>點一下任何貼圖，它就會出現在這裡';
+  } else if (active === 'fav') {
+    list = ALL.filter(s => favs.has(s.key)); title = '我的最愛';
+    empty = '<b>☆</b>還沒有最愛<br>長按貼圖（電腦按右鍵）就能加入';
+  } else {
+    const s = SETS.find(x => x.k === active); list = ALL.filter(x => x.key.startsWith(active + '/')); title = s.t; sub = `${list.length} 張`;
+  }
+  main.innerHTML = `<div class="heading"><h2>${title}</h2><span>${sub}</span></div>`;
+  if (!list.length) { main.insertAdjacentHTML('beforeend', `<div class="empty">${empty}</div>`); return; }
+  const grid = document.createElement('div'); grid.className = 'grid';
+  list.forEach(s => grid.append(cell(s)));
+  main.append(grid);
+}
+function cell(s) {
+  const el = document.createElement('div');
+  el.className = 'st' + (favs.has(s.key) ? ' is-fav' : ''); el.tabIndex = 0; el.setAttribute('role', 'button');
+  el.setAttribute('aria-label', `${s.name}，點一下${canShare ? '分享' : '複製'}，長按預覽`);
+  el.innerHTML = `<img src="${s.webp}" alt="" loading="lazy" decoding="async" width="320" height="270" draggable="false"><div class="nm">${s.name}</div><span class="fav" aria-hidden="true">★</span>`;
+  el.querySelector('img').onerror = function () { this.onerror = null; this.src = s.gif; };
+  bindPress(el, () => send(s, el), () => preview(s));
+  el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); send(s, el); } else if (e.key === 'ContextMenu' || (e.shiftKey && e.key === 'F10')) { e.preventDefault(); preview(s); } };
+  return el;
+}
+// 點一下 vs 長按（觸控 450ms）、右鍵
+function bindPress(el, onTap, onHold) {
+  let timer = null, held = false, sx = 0, sy = 0;
+  el.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    held = false; sx = e.clientX; sy = e.clientY;
+    timer = setTimeout(() => { held = true; navigator.vibrate?.(12); onHold(); }, 450);
+  });
+  el.addEventListener('pointermove', e => { if (timer && Math.hypot(e.clientX - sx, e.clientY - sy) > 10) { clearTimeout(timer); timer = null; } });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => el.addEventListener(ev, () => { clearTimeout(timer); timer = null; }));
+  el.addEventListener('click', e => { if (held) { held = false; e.preventDefault(); return; } onTap(); });
+  el.addEventListener('contextmenu', e => { e.preventDefault(); if (!held) onHold(); });
+}
+
+// ── 送出：手機開分享選單（保留動畫）；電腦能寫入 GIF 就直接複製，否則放 HTML 圖片＋連結 ──
+const blobs = new Map();
+const getBlob = src => {
+  if (!blobs.has(src)) blobs.set(src, fetch(src).then(r => { if (!r.ok) throw new Error(r.status); return r.blob(); }).then(b => new Blob([b], { type: 'image/gif' })));
+  return blobs.get(src);
+};
+let toastTimer;
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2400); }
+function done(s, el, msg) {
+  pushRecent(s.key); navigator.vibrate?.(8);
+  if (el) { el.classList.remove('done'); void el.offsetWidth; el.classList.add('done'); }
+  if (msg) toast(msg);
+  if (active === 'recent' && !q.value) setTimeout(render, 450);
+}
+async function send(s, el) {
+  if (canShare) {
+    try {
+      const file = new File([await getBlob(s.gif)], `${s.name.replace(/[\\/:*?"<>|]/g, '')}.gif`, { type: 'image/gif' });
+      if (navigator.canShare({ files: [file] })) { await navigator.share({ files: [file] }); return done(s, el); }
+    } catch (e) {
+      if (e.name === 'AbortError') return;
+      if (e.name === 'NotAllowedError') return toast('再點一次就能分享');
+    }
+  }
+  const gifOk = window.ClipboardItem && navigator.clipboard?.write && (!ClipboardItem.supports || ClipboardItem.supports('image/gif'));
+  if (gifOk) { try { await navigator.clipboard.write([new ClipboardItem({ 'image/gif': getBlob(s.gif) })]); return done(s, el, `已複製「${s.name}」`); } catch {} }
+  const url = new URL(s.gif, location.href).href;
+  try {
+    if (!window.ClipboardItem) throw 0;
+    await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([`<img src="${url}" alt="${s.name}">`], { type: 'text/html' }), 'text/plain': new Blob([url], { type: 'text/plain' }) })]);
+  } catch { try { await navigator.clipboard.writeText(url); } catch { return toast('瀏覽器不允許存取剪貼簿'); } }
+  done(s, el, `已複製「${s.name}」，貼到聊天室即可`);
+}
+
+// ── 預覽面板 ──
+const pv = $('pv'); let cur = null;
+function preview(s) {
+  cur = s; $('pv-img').src = s.gif; $('pv-img').alt = s.name; $('pv-name').textContent = s.name; $('pv-meta').textContent = s.set;
+  $('pv-send').textContent = canShare ? '分享' : '複製';
+  syncFav(); if (!pv.open) pv.showModal();
+}
+function syncFav() { const on = favs.has(cur.key); $('pv-fav').setAttribute('aria-pressed', String(on)); $('pv-fav').textContent = on ? '★ 最愛' : '☆ 最愛'; }
+$('pv-send').onclick = () => { const s = cur; pv.close(); send(s, null); };
+$('pv-fav').onclick = () => {
+  toggleFav(cur.key); syncFav(); toast(favs.has(cur.key) ? '已加入最愛' : '已移出最愛');
+  document.querySelectorAll('.st').forEach(el => el.querySelector('img').src.endsWith(cur.webp) && el.classList.toggle('is-fav', favs.has(cur.key)));
+  if (active === 'fav') render();
+};
+$('pv-close').onclick = () => pv.close();
+[pv, $('help')].forEach(d => d.addEventListener('click', e => { if (e.target === d) d.close(); }));
+
+// ── 說明 ──
+$('help-tap').textContent = canShare ? '開啟分享選單，直接傳到聊天 App，或選「拷貝」' : '複製貼圖，貼到 Gmail、Notion 是動圖，貼到 Discord、Slack 是會展開的 GIF 連結';
+$('help-btn').onclick = () => $('help').showModal();
+$('help-close').onclick = () => { $('help').close(); store.set('seenHelp', true); };
+
+// ── 搜尋 ──
+let qTimer;
+q.addEventListener('input', () => { $('search').classList.toggle('has', !!q.value); clearTimeout(qTimer); qTimer = setTimeout(render, 120); });
+q.addEventListener('keydown', e => { if (e.key === 'Escape') { q.value = ''; $('search').classList.remove('has'); render(); } if (e.key === 'Enter') q.blur(); });
+$('q-clear').onclick = () => { q.value = ''; $('search').classList.remove('has'); render(); q.focus(); };
+addEventListener('keydown', e => { if (e.key === '/' && document.activeElement !== q && !document.querySelector('dialog[open]')) { e.preventDefault(); q.focus(); } });
+
+render();
+if (!store.get('seenHelp', false)) setTimeout(() => $('help').showModal(), 400);
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js?v=149009c224');
+</script>
+</body>
+</html>
