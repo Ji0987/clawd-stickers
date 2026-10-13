@@ -90,6 +90,7 @@
   .help h3 { margin: 4px 4px 10px; }
   .help ul { margin: 0 0 14px; padding-left: 22px; line-height: 1.8; font-size: 14px; }
   .help p { font-size: 12px; color: var(--muted); margin: 0 4px 12px; }
+  .help a { color: var(--clay); font-weight: 600; }
 
   #toast { position: fixed; left: 50%; bottom: calc(var(--bar) + var(--safe-b) + 18px); transform: translate(-50%, 12px); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-size: 14px; opacity: 0; pointer-events: none; transition: .2s; z-index: 30; width: max-content; max-width: calc(100vw - 32px); text-align: center; }
   #toast.show { opacity: 1; transform: translate(-50%, 0); }
@@ -138,6 +139,7 @@
       <li><b>長按</b>（電腦按右鍵）：放大預覽、加入最愛</li>
       <li>用過的貼圖會出現在底部的「最近」</li>
       <li>手機用瀏覽器選單的<b>「加到主畫面」</b>，就能像 App 一樣開啟，看過的貼圖離線也能用</li>
+      <li id="help-android" hidden>Android 手機可以安裝<a href="https://github.com/Ji0987/clawd-stickers/releases/latest/download/clawd-stickers.apk">「Clawd 貼圖鍵盤」App</a>，在任何聊天 App 都能直接送出動態貼圖</li>
     </ul>
     <p>本站為個人非官方創作，與 Anthropic 無關。</p>
     <button class="btn primary" style="width:100%" id="help-close">知道了</button>
@@ -288,6 +290,7 @@ $('pv-close').onclick = () => pv.close();
 
 // ── 說明 ──
 $('help-tap').textContent = canShare ? '開啟分享選單，直接傳到聊天 App，或複製下來' : '複製貼圖，貼到 Gmail、Notion 是動圖，貼到 Discord、Slack 是會展開的 GIF 連結';
+$('help-android').hidden = !/Android/i.test(navigator.userAgent);
 $('help-btn').onclick = () => $('help').showModal();
 $('help-close').onclick = () => { $('help').close(); store.set('seenHelp', true); };
 
@@ -300,7 +303,7 @@ addEventListener('keydown', e => { if (e.key === '/' && document.activeElement !
 
 render();
 if (!store.get('seenHelp', false)) setTimeout(() => $('help').showModal(), 400);
-if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js?v=9c9081d0c7');
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js?v=538119eb44');
 </script>
 </body>
 </html>

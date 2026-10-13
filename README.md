@@ -8,5 +8,6 @@
 - **長按**（電腦按右鍵）：放大預覽、加入最愛
 - 上方可以搜尋，下方切換分組，常用的會自動出現在「最近」
 - 手機用瀏覽器選單的「加到主畫面」，就能像 App 一樣開啟，看過的貼圖離線也能用
+- Android 手機也可以安裝 [Clawd 貼圖鍵盤 App](https://github.com/Ji0987/clawd-stickers/releases/latest)，在任何聊天 App 都能直接送出動態貼圖
 
 本站為個人非官方創作，與 Anthropic 無關。
