@@ -1,5 +1,5 @@
 // 貼圖鍵盤的離線快取：貼圖檔「先用快取」，頁面「先連網、失敗才用快取」
-const V = '538119eb44';
+const V = 'c8a9de3707';
 const CORE = `core-${V}`, IMG = `img-${V}`;
 
 self.addEventListener('install', e => {
@@ -15,6 +15,7 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
+  if (url.pathname.includes('/app/')) return;  // Android APK 與版本資訊：交給瀏覽器，不塞進離線快取
   if (url.pathname.includes('/s/') || url.pathname.includes('/icons/')) {
     e.respondWith(caches.open(IMG).then(async c => {
       const hit = await c.match(e.request);

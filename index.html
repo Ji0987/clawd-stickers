@@ -139,7 +139,7 @@
       <li><b>長按</b>（電腦按右鍵）：放大預覽、加入最愛</li>
       <li>用過的貼圖會出現在底部的「最近」</li>
       <li>手機用瀏覽器選單的<b>「加到主畫面」</b>，就能像 App 一樣開啟，看過的貼圖離線也能用</li>
-      <li id="help-android" hidden>Android 手機可以安裝<a href="https://github.com/Ji0987/clawd-stickers/releases/latest/download/clawd-stickers.apk">「Clawd 貼圖鍵盤」App</a>，在任何聊天 App 都能直接送出動態貼圖</li>
+      <li id="help-android" hidden>Android 手機可以安裝<a href="app/clawd-stickers.apk" download>「Clawd 貼圖鍵盤」App</a>，在任何聊天 App 都能直接送出動態貼圖</li>
     </ul>
     <p>本站為個人非官方創作，與 Anthropic 無關。</p>
     <button class="btn primary" style="width:100%" id="help-close">知道了</button>
@@ -303,7 +303,7 @@ addEventListener('keydown', e => { if (e.key === '/' && document.activeElement !
 
 render();
 if (!store.get('seenHelp', false)) setTimeout(() => $('help').showModal(), 400);
-if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js?v=538119eb44');
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js?v=c8a9de3707');
 </script>
 </body>
 </html>
